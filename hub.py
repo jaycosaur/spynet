@@ -1,4 +1,4 @@
-from src.camera_hub import Hub
+from vision_network.hub import Hub
 import cv2
 
 

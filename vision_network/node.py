@@ -6,24 +6,45 @@ import cv2
 import imagezmq
 
 from .network import Network, NetworkHandler, NetworkService, HUB_TYPE, NODE_TYPE
-from .node_setup import CameraNode, CameraBase
+from .camera import CameraBase
 from .utils import image as image_utils
 
 
-class CvCamera(CameraBase):
-    def __init__(self, width: int, cam_id=0):
-        self.__camera = cv2.VideoCapture(cam_id)
-        self.__width = width
+class CameraNode(threading.Thread):
+    def __init__(
+        self,
+        hub: NetworkService,
+        camera: CameraBase,
+        node_id: str,
+        group=None,
+        target=None,
+        name=None,
+        args=(),
+        kwargs=None,
+    ):
+        if not isinstance(camera, CameraBase):
+            raise AttributeError("camera must subclass the CameraBase class")
+        super().__init__(group=group, target=target, name=name)
+        self.args = args
+        self.kwargs = kwargs
+        self.hub = hub
+        self.camera = camera
+        self.node_id = node_id
+        self._is_stopped = False
 
-    def read(self):
-        ok, frame = self.__camera.read()
-        if not ok:
-            return ok, None
+    def run(self):
+        sender = imagezmq.ImageSender(
+            connect_to="tcp://" + str(self.hub.ip_addr) + ":" + str(self.hub.port)
+        )
+        while not self._is_stopped:
+            ok, image = self.camera.read()
+            if ok:
+                sender.send_image(self.node_id, image)
 
-        return ok, image_utils.resize(frame, self.__width)
+        print(f"Node {self.node_id} Finished")
 
-    def release(self):
-        self.__camera.release()
+    def stop(self):
+        self._is_stopped = True
 
 
 class Discovery(NetworkHandler):
