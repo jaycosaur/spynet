@@ -16,7 +16,7 @@ Hub processes incoming messages in thread, to view images on mac you will need t
 ## HUB
 
 ```python
-from vision_network.hub import Hub
+from vision_network import hub
 import cv2
 
 
@@ -24,10 +24,10 @@ def message_handler(cam_id, image):
     print(f"Received image from {cam_id} of shape {image.shape}")
 
 
-hub = Hub(network_id="special", message_handler=message_handler)
-hub.start()
+hub = hub.Hub(network_id="special", message_handler=message_handler)
 
 try:
+    hub.start()
     input("waiting ...")
 finally:
     print("Stopping...")
@@ -37,14 +37,13 @@ finally:
 ## NODE
 
 ```python
-from vision_network.node import Node
-from vision_network.camera import CvCamera
+from vision_network import node, camera
 
-cv_camera = CvCamera(400) # restrict image width to 400
-node = Node(node_id="special_cam", camera=cv_camera, network_id="special")
-node.start()
+cv_camera = camera.CvCamera(400)
+node = node.Node(node_id="special_cam", camera=cv_camera, network_id="special")
 
 try:
+    node.start()
     input("Waiting...")
 finally:
     cv_camera.release()
