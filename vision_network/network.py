@@ -147,8 +147,8 @@ class Network(Thread):
             self._stop_event.wait()
         finally:
             browser.cancel()
-            zeroconf.close()
             zeroconf.unregister_service(info)
+            zeroconf.close()
 
     def stop(self):
         self._is_stopped = True
