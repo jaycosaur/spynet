@@ -3,6 +3,7 @@ from dataclasses import dataclass, asdict
 import typing
 from abc import ABC, abstractmethod
 import uuid
+import logging
 
 from zeroconf import ServiceBrowser, Zeroconf, ServiceInfo
 from .utils import ip as util_ip
@@ -25,7 +26,6 @@ class NetworkService:
 
 def get_about_service(zeroconf, type, name) -> typing.Optional[NetworkService]:
     info = zeroconf.get_service_info(type, name)
-    print(info)
     if not info:
         return None
     service_type = info.properties.get(b"type")
@@ -54,7 +54,7 @@ def get_about_service(zeroconf, type, name) -> typing.Optional[NetworkService]:
             name=name,
         )
     else:
-        print(
+        logging.info(
             f"Unknown service {name} discovered at addresses:",
             [util_ip.unpack_ip(ip) for ip in addresses],
             "port",
@@ -145,7 +145,7 @@ class Network(Thread):
         self._is_stopped = False
         self._stop_event = Event()
 
-        self._network_listener: Optional[ServiceListener] = None
+        self._network_listener: typing.Optional[ServiceListener] = None
 
     def __repr__(self) -> str:
         return "Network(service_id=%s,service_type=%s,network_id=%s,port=%s)" % (

@@ -12,21 +12,11 @@ from .utils import image as image_utils
 
 class CameraNode(threading.Thread):
     def __init__(
-        self,
-        hub: NetworkService,
-        camera: CameraBase,
-        node_id: str,
-        group=None,
-        target=None,
-        name=None,
-        args=(),
-        kwargs=None,
+        self, hub: NetworkService, camera: CameraBase, node_id: str, network_id: str,
     ):
         if not isinstance(camera, CameraBase):
             raise AttributeError("camera must subclass the CameraBase class")
-        super().__init__(group=group, target=target, name=name)
-        self.args = args
-        self.kwargs = kwargs
+        super().__init__(name=f"Node(network_id={network_id})", daemon=True)
         self.hub = hub
         self.camera = camera
         self.node_id = node_id
@@ -52,9 +42,10 @@ class Discovery(NetworkHandler):
     hub: typing.Optional[NetworkService] = None
     node: typing.Optional[CameraNode] = None
 
-    def __init__(self, node_id: str, camera: CameraBase):
+    def __init__(self, node_id: str, network_id: str, camera: CameraBase):
         self.camera = camera
         self.node_id = node_id
+        self.network_id = network_id
 
     def __len__(self):
         return len(self.services)
@@ -66,7 +57,10 @@ class Discovery(NetworkHandler):
             print("Hub has come online. Registering")
             self.hub = service
             self.node = CameraNode(
-                node_id=self.node_id, hub=self.hub, camera=self.camera
+                node_id=self.node_id,
+                hub=self.hub,
+                camera=self.camera,
+                network_id=self.network_id,
             )
             self.node.start()
 
@@ -76,8 +70,9 @@ class Discovery(NetworkHandler):
                 self.services.pop(idx)
         if service.service_type == HUB_TYPE:
             self.hub = None
-            self.node.stop()
-            self.node = None
+            if self.node:
+                self.node.stop()
+                self.node = None
 
         print(f"Now have {len(self)} active services.")
 
@@ -94,11 +89,14 @@ class Node:
     ):
         self.node_id = node_id
         self.camera = camera
+        self.network_id = network_id
         self.service = Network(
             service_type=NODE_TYPE,
             port=8080,
-            network_id="special",
-            network_handler=Discovery(node_id=self.node_id, camera=self.camera,),
+            network_id=network_id,
+            network_handler=Discovery(
+                node_id=self.node_id, network_id=self.network_id, camera=self.camera,
+            ),
             service_id=self.node_id,
         )
 
