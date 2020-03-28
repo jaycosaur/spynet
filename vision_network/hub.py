@@ -4,7 +4,7 @@ import typing
 import cv2
 import imagezmq
 
-from .network import NetworkHandler, Network, NetworkService, HUB_TYPE
+from .network import NetworkHandler, Network, NetworkService, ServiceType
 
 
 MessageHandler = typing.Callable[[str, typing.Any], None]
@@ -17,7 +17,7 @@ class Hub(threading.Thread, NetworkHandler):
         super().__init__(name=f"Hub(network_id={network_id})")
         self.message_hub = imagezmq.ImageHub(open_port=f"tcp://*:{port}")
         self.service = Network(
-            service_type=HUB_TYPE,
+            service_type=ServiceType.HUB,
             port=port,
             network_id=network_id,
             network_handler=self,

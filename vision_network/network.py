@@ -4,19 +4,20 @@ import typing
 from abc import ABC, abstractmethod
 import uuid
 import logging
+from enum import Enum
 
 from zeroconf import ServiceBrowser, Zeroconf, ServiceInfo
 from .utils import ip as util_ip
 
 
-HUB_TYPE = "HUB"
-NODE_TYPE = "NODE"
-SERVICE_TYPES = (HUB_TYPE, NODE_TYPE)
+class ServiceType(Enum):
+    HUB = "HUB"
+    NODE = "NODE"
 
 
 @dataclass
 class NetworkService:
-    service_type: str
+    service_type: ServiceType
     service_id: str
     ip_addr: str
     port: int
@@ -28,9 +29,13 @@ def get_about_service(zeroconf, type, name) -> typing.Optional[NetworkService]:
     info = zeroconf.get_service_info(type, name)
     if not info:
         return None
-    service_type = info.properties.get(b"type")
-    if service_type:
-        service_type = service_type.decode("utf-8")
+    service_type = None
+    raw_type = info.properties.get(b"type")
+    if raw_type:
+        try:
+            service_type = ServiceType(raw_type.decode("utf-8"))
+        except ValueError:
+            pass
     service_id = info.properties.get(b"id")
     if service_id:
         service_id = service_id.decode("utf-8")
@@ -39,12 +44,7 @@ def get_about_service(zeroconf, type, name) -> typing.Optional[NetworkService]:
         service_network_id = service_network_id.decode("utf-8")
     addresses = info.addresses
     port = info.port
-    if (
-        service_type in SERVICE_TYPES
-        and service_type
-        and service_id
-        and service_network_id
-    ):
+    if service_type is not None and service_id and service_network_id:
         return NetworkService(
             service_type=service_type,
             service_id=service_id,
@@ -125,7 +125,7 @@ class ServiceListener:
 class Network(Thread):
     def __init__(
         self,
-        service_type: str,
+        service_type: ServiceType,
         port: int,
         network_id: str,
         network_handler: NetworkHandler,
@@ -163,7 +163,7 @@ class Network(Thread):
             addresses=[util_ip.get_packed_ip(ip)],
             port=self.port,
             properties={
-                "type": self.service_type,
+                "type": self.service_type.value,
                 "id": self.service_id,
                 "network_id": self.network_id,
             },

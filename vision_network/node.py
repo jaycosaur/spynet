@@ -5,7 +5,12 @@ import time
 import cv2
 import imagezmq
 
-from .network import Network, NetworkHandler, NetworkService, HUB_TYPE, NODE_TYPE
+from .network import (
+    Network,
+    NetworkHandler,
+    NetworkService,
+    ServiceType,
+)
 from .camera import CameraBase
 from .utils import image as image_utils
 
@@ -53,7 +58,7 @@ class Discovery(NetworkHandler):
     def on_service_added(self, service: NetworkService):
         self.services.append(service)
         print(f"Now have {len(self)} active services.")
-        if service.service_type == HUB_TYPE:
+        if service.service_type is ServiceType.HUB:
             print("Hub has come online. Registering")
             self.hub = service
             self.node = CameraNode(
@@ -68,7 +73,7 @@ class Discovery(NetworkHandler):
         for idx, service in enumerate(self.services):
             if service.service_id == removed_service.service_id:
                 self.services.pop(idx)
-        if service.service_type == HUB_TYPE:
+        if service.service_type is ServiceType.HUB:
             self.hub = None
             if self.node:
                 self.node.stop()
@@ -91,7 +96,7 @@ class Node:
         self.camera = camera
         self.network_id = network_id
         self.service = Network(
-            service_type=NODE_TYPE,
+            service_type=ServiceType.NODE,
             port=8080,
             network_id=network_id,
             network_handler=Discovery(
