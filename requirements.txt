@@ -1,7 +1,6 @@
 appdirs==1.4.3
 astroid==2.3.3
 attrs==19.3.0
-black==19.10b0
 click==7.1.1
 ifaddr==0.1.6
 imagezmq==1.0.1
@@ -12,6 +11,7 @@ numpy==1.18.2
 opencv-python==4.1.2.30
 pathspec==0.7.0
 pylint==2.4.4
+pyring==0.0.11
 pyzmq==19.0.0
 regex==2020.2.20
 six==1.14.0
