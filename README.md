@@ -5,7 +5,7 @@
 Includes:
 
 1. Auto-discovery of camera nodes via zeroconf networking.
-2. ZeroMQ messaging from nodes to hub.
+2. ZeroMQ messaging from nodes to hub, courtesy of ImageZMQ.
 3. Integrated camera producers: OpenCV
 4. 3 line setup for camera node, 3 line setup for hub
 
