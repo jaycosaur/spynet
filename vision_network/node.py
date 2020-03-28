@@ -21,11 +21,15 @@ class CameraNode(threading.Thread):
     ):
         if not isinstance(camera, CameraBase):
             raise AttributeError("camera must subclass the CameraBase class")
-        super().__init__(name=f"Node(network_id={network_id})", daemon=True)
+        self._network_id = network_id
+        super().__init__(name=repr(self), daemon=True)
         self.hub = hub
         self.camera = camera
         self.node_id = node_id
         self._is_stopped = False
+
+    def __repr__(self) -> str:
+        return f"Node(network_id={self._network_id})"
 
     def run(self):
         sender = imagezmq.ImageSender(

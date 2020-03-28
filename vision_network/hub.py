@@ -14,7 +14,8 @@ class Hub(threading.Thread, NetworkHandler):
     network_services: typing.List[NetworkService] = []
 
     def __init__(self, network_id: str, message_handler: MessageHandler, port=5555):
-        super().__init__(name=f"Hub(network_id={network_id})")
+        self._network_id = network_id
+        super().__init__(name=repr(self))
         self.message_hub = imagezmq.ImageHub(open_port=f"tcp://*:{port}")
         self.service = Network(
             service_type=ServiceType.HUB,
@@ -25,6 +26,9 @@ class Hub(threading.Thread, NetworkHandler):
         self.message_handler = message_handler
         self._is_message_handler_stopped = False
         self._is_started = False
+
+    def __repr__(self) -> str:
+        return f"Hub(network_id={self._network_id})"
 
     def run(self):
         while not self._is_message_handler_stopped:
