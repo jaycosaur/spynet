@@ -11,7 +11,7 @@ Includes:
 
 Much of the time invested into setting up distrubted vision networks is in device setup, dependency compilation, device management and software deployment.
 
-The philosophy of this project is to be able to build locally, cross-compile and deploy on edge-based devices running containerised services (Dockerfiles) with a light manager (Docker Compose). Both of which are well supported on a wide range of devices. This allows very fast setup of devices (as dependencies will be within the docker containers), and allow the developer to build and deploy fast focusing there efforts on the valuable hub processing / data analytics.
+The philosophy of this project is to be able to build locally, cross-compile and deploy on edge-based devices running containerised services (Dockerfiles) with a light manager (Docker Compose). Both of which are well supported on a wide range of devices. This allows fast setup of devices (as dependencies will be within the docker containers), and allow the developer to build and deploy services fast, to focus their efforts on the valuable hub processing / data analytics.
 
 ## Getting Started (Edge Devices)
 
