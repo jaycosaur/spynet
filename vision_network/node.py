@@ -14,10 +14,17 @@ from .network import (
 from .camera import CameraBase
 from .utils import image as image_utils
 
+ImageFilterCallable = typing.Callable[[typing.Any], bool]
+
 
 class CameraNode(threading.Thread):
     def __init__(
-        self, hub: NetworkService, camera: CameraBase, node_id: str, network_id: str,
+        self,
+        hub: NetworkService,
+        camera: CameraBase,
+        node_id: str,
+        network_id: str,
+        image_filter: typing.Optional[ImageFilterCallable],
     ):
         if not isinstance(camera, CameraBase):
             raise AttributeError("camera must subclass the CameraBase class")
@@ -27,6 +34,10 @@ class CameraNode(threading.Thread):
         self.camera = camera
         self.node_id = node_id
         self._is_stopped = False
+        if image_filter:
+            self._image_filter = image_filter
+        else:
+            self._image_filter = lambda _: True
 
     def __repr__(self) -> str:
         return f"Node(network_id={self._network_id})"
@@ -37,7 +48,12 @@ class CameraNode(threading.Thread):
         )
         while not self._is_stopped:
             ok, image = self.camera.read()
-            if ok:
+            if not ok:
+                continue
+
+            image_pass = self._image_filter(image)
+
+            if image_pass:
                 sender.send_image(self.node_id, image)
 
         print(f"Node {self.node_id} Finished")
@@ -51,10 +67,17 @@ class Discovery(NetworkHandler):
     hub: typing.Optional[NetworkService] = None
     node: typing.Optional[CameraNode] = None
 
-    def __init__(self, node_id: str, network_id: str, camera: CameraBase):
+    def __init__(
+        self,
+        node_id: str,
+        network_id: str,
+        camera: CameraBase,
+        image_filter: typing.Optional[ImageFilterCallable] = None,
+    ):
         self.camera = camera
         self.node_id = node_id
         self.network_id = network_id
+        self.image_filter = image_filter
 
     def __len__(self):
         return len(self.services)
@@ -70,6 +93,7 @@ class Discovery(NetworkHandler):
                 hub=self.hub,
                 camera=self.camera,
                 network_id=self.network_id,
+                image_filter=self.image_filter,
             )
             self.node.start()
 
@@ -94,7 +118,12 @@ class Discovery(NetworkHandler):
 
 class Node:
     def __init__(
-        self, node_id: str, camera: CameraBase, network_id: str, port=8080,
+        self,
+        node_id: str,
+        camera: CameraBase,
+        network_id: str,
+        port=8080,
+        image_filter: typing.Optional[ImageFilterCallable] = None,
     ):
         self.node_id = node_id
         self.camera = camera
@@ -104,7 +133,10 @@ class Node:
             port=8080,
             network_id=network_id,
             network_handler=Discovery(
-                node_id=self.node_id, network_id=self.network_id, camera=self.camera,
+                node_id=self.node_id,
+                network_id=self.network_id,
+                camera=self.camera,
+                image_filter=image_filter,
             ),
             service_id=self.node_id,
         )
