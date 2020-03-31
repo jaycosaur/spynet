@@ -4,6 +4,9 @@
 
 Edge based devices will need to have Docker and Docker Compose installed (additionally optionally git). I have not included instructions on how to set this up as it is widely available at other sources.
 
+Install Docker + Compose: https://dev.to/rohansawant/installing-docker-and-docker-compose-on-the-raspberry-pi-in-5-simple-steps-3mgl
+Install Docker Compose: https://docs.docker.com/compose/install/
+
 ## Whats Included
 
 Included in this guide are two types of devices:

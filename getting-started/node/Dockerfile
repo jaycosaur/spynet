@@ -2,7 +2,7 @@ FROM mohaseeb/raspberrypi3-python-opencv:latest
 
 COPY . /root/app
 
-RUN python -m pip app/requirements.txt
+RUN python -m pip -r app/requirements.txt
 
 WORKDIR /root/app
 
