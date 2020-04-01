@@ -1,4 +1,4 @@
-# Distributed Vision Networking
+# SpyNet - Distributed Vision Networking
 
 ## WORK IN PROGRESS
 

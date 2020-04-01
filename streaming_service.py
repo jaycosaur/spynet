@@ -4,7 +4,7 @@ import os
 import typing
 import threading
 
-from flask import Flask, Response, jsonify
+from flask import Flask, Response, jsonify, send_from_directory
 from flask_cors import CORS
 import cv2
 
@@ -18,7 +18,7 @@ os.environ["WERKZEUG_RUN_MAIN"] = "true"
 CLI = sys.modules["flask.cli"]
 CLI.show_server_banner = lambda *x: None  # type: ignore
 
-APP = Flask(__name__,)
+APP = Flask(__name__, static_folder="hub-client/build")
 CORS(APP)
 
 node_services: typing.Dict[str, CameraInformation] = {}
@@ -28,7 +28,7 @@ def from_queue(camera_id: str):
     service = node_services.get(camera_id)
     while service:
         image = service.read_frame()
-        res, im_jpg = cv2.imencode(".jpg", image)  # type: ignore
+        res, im_jpg = cv2.imencode(".jpg", image)
         if res:
             yield (
                 b"--frame\r\n"
@@ -39,7 +39,10 @@ def from_queue(camera_id: str):
 
 @APP.route("/nodes", methods=["GET"])
 def active_cameras():
-    cameras = [dict(nodeId=service.node_id, isOnline=service.is_online) for service in node_services.values()]
+    cameras = [
+        dict(nodeId=service.node_id, isOnline=service.is_online)
+        for service in node_services.values()
+    ]
     return jsonify(cameras)
 
 
@@ -48,6 +51,16 @@ def video_feed(node_id: str):
     return Response(
         from_queue(node_id), mimetype="multipart/x-mixed-replace; boundary=frame"
     )
+
+
+# Serve React App
+@APP.route("/", defaults={"path": ""})
+@APP.route("/<path:path>")
+def serve(path):
+    if path != "" and os.path.exists(APP.static_folder + "/" + path):
+        return send_from_directory(APP.static_folder, path)
+    else:
+        return send_from_directory(APP.static_folder, "index.html")
 
 
 class StreamingService:
