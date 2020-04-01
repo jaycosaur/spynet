@@ -1,16 +1,17 @@
-from vision_network import hub
-import cv2
+from spynet import hub
+from streaming_service import StreamingService
 
+streamer = StreamingService()
 
-def message_handler(cam_id, image):
-    print(f"Received image from {cam_id} of shape {image.shape}")
+hub_service = hub.Hub(
+    network_id="special", message_handler=streamer.hub_message_handler
+)
 
-
-hub = hub.Hub(network_id="special", message_handler=message_handler)
+streamer.start()
 
 try:
-    hub.start()
-    input("waiting ...")
+    hub_service.start()
+    input("press any key to stop...")
 finally:
     print("Stopping...")
-    hub.stop()
+    hub_service.stop()
